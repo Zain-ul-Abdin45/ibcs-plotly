@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ibcs-plotly"
+version = "0.1.0"
+description = "Interactive IBCS-compliant business charts on Plotly, with optional Streamlit components"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Zain Ul Abdin" }]
+keywords = ["ibcs", "plotly", "streamlit", "dashboard", "business-charts", "data-visualization"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "plotly>=5.18",
+    "pandas>=2.0",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+streamlit = ["streamlit>=1.30"]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[project.urls]
+Homepage = "https://github.com/YOUR_GITHUB_USERNAME/ibcs-plotly"
+Issues = "https://github.com/YOUR_GITHUB_USERNAME/ibcs-plotly/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ibcs_plotly"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
