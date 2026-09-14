@@ -29,8 +29,8 @@ streamlit = ["streamlit>=1.30"]
 dev = ["pytest>=8.0", "ruff>=0.6"]
 
 [project.urls]
-Homepage = "https://github.com/YOUR_GITHUB_USERNAME/ibcs-plotly"
-Issues = "https://github.com/YOUR_GITHUB_USERNAME/ibcs-plotly/issues"
+Homepage = "https://github.com/Zain-ul-Abdin45/ibcs-plotly"
+Issues = "https://github.com/Zain-ul-Abdin45/ibcs-plotly/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ibcs_plotly"]

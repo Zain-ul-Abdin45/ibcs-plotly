@@ -35,7 +35,7 @@ df_ac, df_py, py_year = compare_periods(df, "year", sel_year)
 show_py = has_comparison(df_py)
 
 st.title("Regional Revenue — IBCS Demo")
-st.caption("Synthetic data. Built with ibcs-plotly: https://github.com/YOUR_GITHUB_USERNAME/ibcs-plotly")
+st.caption("Synthetic data. Built with ibcs-plotly: https://github.com/Zain-ul-Abdin45/ibcs-plotly")
 
 total_ac = df_ac["revenue"].sum()
 total_py = df_py["revenue"].sum() if show_py else None
