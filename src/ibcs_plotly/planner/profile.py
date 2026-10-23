@@ -274,7 +274,7 @@ def profile_dataframe(
         s = df[name]
         n_unique = int(s.nunique(dropna=True))
         role = _role(s, str(name), n, n_unique)
-        pii = str(name) in forced or bool(_PII_NAME.search(str(name))) or _pii_by_value(s)
+        pii = bool(str(name) in forced or _PII_NAME.search(str(name)) or _pii_by_value(s))
 
         cp = ColumnProfile(
             name=str(name), dtype=str(s.dtype), role=role, n_unique=n_unique,
