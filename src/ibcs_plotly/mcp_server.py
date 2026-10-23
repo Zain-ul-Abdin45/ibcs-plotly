@@ -24,7 +24,16 @@ from pathlib import Path
 import pandas as pd
 
 from .lint import check_figure
-from .planner import ChartSpec, Tier, build_plan, clamp_tier, expose, llm_context, render_spec
+from .planner import (
+    CHART_KINDS,
+    ChartSpec,
+    Tier,
+    build_plan,
+    clamp_tier,
+    expose,
+    llm_context,
+    render_spec,
+)
 from .planner.exposure import MIN_GROUP
 
 MAX_DATASETS = 20
@@ -81,30 +90,50 @@ class Session:
             raise ValueError(f"missing optional dependency for {full.suffix}: {e}") from e
         except Exception as e:  # parser messages can quote file content: keep them server-side
             raise ValueError(f"could not parse {full.name} as {full.suffix[1:]}") from e
-        df = self.datasets[name]
+        df = self._df(name)
         return {"name": name, "n_rows": len(df), "n_columns": df.shape[1],
                 "max_tier": self.max_tier.name}
+
+    def _df(self, name: str) -> pd.DataFrame:
+        try:
+            return self.datasets[name]
+        except KeyError:
+            raise ValueError(f"dataset {name!r} is not loaded; call load_dataset first "
+                             f"(loaded: {sorted(self.datasets)})") from None
+
+    @staticmethod
+    def _spec(spec) -> ChartSpec:
+        fields = {"kind", "title", "params", "rationale", "status", "issues"}
+        if not isinstance(spec, dict) or "kind" not in spec:
+            raise ValueError("spec must be an object with 'kind' and 'params': copy one chart "
+                             "from the plan_charts result")
+        if set(spec) - fields:
+            raise ValueError(f"unknown spec fields {sorted(set(spec) - fields)}; "
+                             f"allowed: {sorted(fields)}")
+        if spec["kind"] not in CHART_KINDS:
+            raise ValueError(f"kind must be one of {list(CHART_KINDS)}")
+        return ChartSpec(**spec)
 
     def _tier(self, requested: str) -> Tier:
         return clamp_tier(Tier.parse(requested), self.max_tier)
 
     def describe(self, name: str, tier: str = "SCHEMA", sample_rows: int = 20) -> dict:
-        return expose(self.datasets[name], self._tier(tier), sample_rows=sample_rows,
+        return expose(self._df(name), self._tier(tier), sample_rows=sample_rows,
                       allow_pii=self.allow_pii, pii_columns=self.pii_columns,
                       min_group=self.min_group)
 
     def plan(self, name: str, tier: str = "SCHEMA", goal: str | None = None) -> dict:
         t = self._tier(tier)
-        plan = build_plan(self.datasets[name], t, goal, pii_columns=self.pii_columns)
+        plan = build_plan(self._df(name), t, goal, pii_columns=self.pii_columns)
         return {**plan.to_dict(), "markdown": plan.to_markdown()}
 
     def context(self, name: str, tier: str = "SCHEMA", goal: str | None = None) -> dict:
-        return llm_context(self.datasets[name], self._tier(tier), goal,
+        return llm_context(self._df(name), self._tier(tier), goal,
                            allow_pii=self.allow_pii, pii_columns=self.pii_columns,
                            min_group=self.min_group)
 
     def check(self, name: str, spec: dict) -> list[dict]:
-        fig = render_spec(self.datasets[name], ChartSpec(**spec))
+        fig = render_spec(self._df(name), self._spec(spec))
         findings = [f.to_dict() for f in check_figure(fig)]
         if self.max_tier < Tier.STATS:
             # messages quote figure values (axis starts, bar counts): rule + severity only
@@ -117,7 +146,7 @@ class Session:
             raise PermissionError("output must be a .html or .json file under IBCS_MCP_DATA_DIR")
         if out.exists() and out not in self._written:
             raise FileExistsError("refusing to overwrite a file this session did not create")
-        fig = render_spec(self.datasets[name], ChartSpec(**spec))
+        fig = render_spec(self._df(name), self._spec(spec))
         self._written.add(out)
         out.write_text(fig.to_html(include_plotlyjs="cdn") if out.suffix == ".html"
                        else fig.to_json())
