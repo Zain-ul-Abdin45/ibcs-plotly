@@ -31,9 +31,9 @@ def grouped_column(
     ac = np.asarray(ac, dtype=float)
     py = np.asarray(py, dtype=float)
 
-    var_pct = (
-        np.where(py > 0, (ac - py) / py * 100, 0) if show_py else np.zeros(len(ac))
-    )
+    var_pct = np.zeros(len(ac))
+    if show_py:
+        np.divide((ac - py) * 100, py, out=var_pct, where=py > 0)
 
     fig = make_subplots(
         rows=2, cols=1, row_heights=[0.72, 0.28],
@@ -111,6 +111,10 @@ def horizontal_bar(
     return fig
 
 
+def _signed(v: float) -> str:
+    return f"{v:+,.0f}" if float(v).is_integer() else f"{v:+,.1f}"
+
+
 def variance_waterfall(
     labels,
     ac,
@@ -121,7 +125,7 @@ def variance_waterfall(
     total_label: str = "Net Delta",
 ) -> go.Figure:
     """Waterfall of AC-PY variance per category, with a total bar."""
-    variances = [int(a) - int(p) for a, p in zip(ac, py)]
+    variances = [float(a) - float(p) for a, p in zip(ac, py)]
     x_labels = list(labels) + [total_label]
     y_vals = variances + [sum(variances)]
 
@@ -132,7 +136,7 @@ def variance_waterfall(
         increasing=dict(marker_color=theme.var_pos),
         decreasing=dict(marker_color=theme.var_neg),
         totals=dict(marker_color=theme.ac),
-        text=[f"{v:+d}" for v in variances] + [f"{sum(variances):+d}"],
+        text=[_signed(v) for v in variances] + [_signed(sum(variances))],
         textposition="outside", textfont=dict(size=11),
     ))
     layout = theme.plotly_layout()
@@ -185,4 +189,36 @@ def small_multiples(
     fig.update_layout(**theme.plotly_layout(), height=height)
     for ann in fig.layout.annotations:
         ann.font.size = 11
+    return fig
+
+
+def line_comparison(
+    labels,
+    ac,
+    py=None,
+    *,
+    ac_name: str = "AC",
+    py_name: str = "PY",
+    theme: IBCSTheme = DEFAULT_THEME,
+    height: int = 300,
+) -> go.Figure:
+    """AC line (dark, solid) against an optional PY/reference line (light).
+
+    Used for trends, year-to-date and rolling averages: same encoding as the
+    columns, so AC and PY never change meaning between chart types.
+    """
+    fig = go.Figure()
+    if py is not None:
+        fig.add_trace(go.Scatter(
+            x=list(labels), y=list(py), mode="lines", name=py_name,
+            line=dict(color=theme.py, width=2),
+        ))
+    fig.add_trace(go.Scatter(
+        x=list(labels), y=list(ac), mode="lines", name=ac_name,
+        line=dict(color=theme.ac, width=2.5),
+    ))
+    fig.update_layout(
+        **theme.plotly_layout(), height=height,
+        yaxis=dict(gridcolor=theme.border, rangemode="tozero"),
+    )
     return fig

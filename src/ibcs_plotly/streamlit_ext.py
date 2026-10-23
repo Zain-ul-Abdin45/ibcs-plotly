@@ -5,6 +5,8 @@ the base CSS. Import this module only if streamlit is installed
 
 from __future__ import annotations
 
+import html
+
 import numpy as np
 
 from .theme import DEFAULT_THEME, IBCSTheme
@@ -50,7 +52,13 @@ def kpi_card(
     suffix: str = "",
     na_reason: str = "N/A",
 ) -> str:
-    """Returns an HTML snippet - pass to st.markdown(..., unsafe_allow_html=True)."""
+    """Returns an HTML snippet - pass to st.markdown(..., unsafe_allow_html=True).
+
+    label, value, suffix and na_reason are HTML-escaped, so data-derived text is safe.
+    """
+    label, value, suffix, na_reason = (
+        html.escape(str(s)) for s in (label, value, suffix, na_reason)
+    )
     if delta_pct is None:
         delta_html = f'<div class="ibcs-kpi-delta-na">{na_reason}</div>'
     elif np.isfinite(delta_pct):

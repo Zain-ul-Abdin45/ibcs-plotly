@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ibcs-plotly"
-version = "0.1.0"
+version = "0.2.0"
 description = "Interactive IBCS-compliant business charts on Plotly, with optional Streamlit components"
 readme = "README.md"
 license = "MIT"
@@ -26,7 +26,11 @@ dependencies = [
 
 [project.optional-dependencies]
 streamlit = ["streamlit>=1.30"]
+mcp = ["mcp>=1.2"]
 dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[project.scripts]
+ibcs-plotly-mcp = "ibcs_plotly.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/Zain-ul-Abdin45/ibcs-plotly"
