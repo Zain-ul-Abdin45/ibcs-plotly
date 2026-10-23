@@ -8,3 +8,8 @@ build/
 .venv/
 venv/
 .DS_Store
+
+# Everything test-related stays local and out of production commits:
+# unit tests, seed/real data, harnesses, reports, image-generation scripts, instructions.
+tests/
+testdata/
