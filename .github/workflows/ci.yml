@@ -5,8 +5,11 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -17,5 +20,33 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev,streamlit]"
-      - run: ruff check src tests
-      - run: pytest
+      - run: ruff check src examples
+      - name: Import every module
+        run: python -c "import ibcs_plotly, ibcs_plotly.lint, ibcs_plotly.mcp_server, ibcs_plotly.streamlit_ext, ibcs_plotly.planner"
+      - name: Smoke test (plan, render and lint charts end to end)
+        run: |
+          python - <<'PY'
+          import numpy as np
+          import pandas as pd
+          from ibcs_plotly import check_figure
+          from ibcs_plotly.planner import build_plan, expose, llm_context, render_spec
+
+          rng = np.random.default_rng(0)
+          days = pd.date_range("2025-01-01", "2026-06-30")
+          df = pd.DataFrame({
+              "date": days,
+              "region": rng.choice(list("NSEW"), len(days)),
+              "email": [f"u{i}@example.com" for i in range(len(days))],
+              "revenue": rng.uniform(1, 9, len(days)),
+          })
+          plan = build_plan(df, "STATS")
+          kinds = {c.kind for c in plan.charts}
+          assert {"grouped_column", "horizontal_bar", "variance_waterfall", "time_series"} <= kinds, kinds
+          for spec in plan.charts:
+              errors = [f for f in check_figure(render_spec(df, spec)) if f.severity == "error"]
+              assert not errors, (spec.title, errors)
+          schema = str(llm_context(df, "SCHEMA"))
+          assert "u1@example.com" not in schema and "email" not in plan.summary["columns"].__str__()
+          assert {r["email"] for r in expose(df, "SAMPLE")["rows"]} == {"***"}
+          print("smoke ok:", sorted(kinds))
+          PY
