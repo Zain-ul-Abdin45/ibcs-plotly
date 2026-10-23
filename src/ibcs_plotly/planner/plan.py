@@ -39,13 +39,16 @@ class Calculation:
     note: str = ""
 
 
+CHART_KINDS = ("grouped_column", "horizontal_bar", "variance_waterfall", "small_multiples",
+               "time_series")
+
+
 @dataclass
 class ChartSpec:
-    # grouped_column | horizontal_bar | variance_waterfall | small_multiples | time_series
-    kind: str
-    title: str
-    params: dict
-    rationale: str
+    kind: str  # one of CHART_KINDS
+    title: str = ""
+    params: dict = field(default_factory=dict)
+    rationale: str = ""
     status: str = "ready"  # ready | needs_work
     issues: list[str] = field(default_factory=list)
 

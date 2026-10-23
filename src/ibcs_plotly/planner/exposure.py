@@ -99,10 +99,17 @@ def expose(
                 st["mean"] = c.mean
             if c.role in ("dimension", "boolean") and c.name not in pii_cols:
                 vc = df[c.name].value_counts()
-                st["top_values"] = {_clip(str(k)): int(v)
-                                    for k, v in vc.head(top_k).items() if v >= min_group}
+                shown = [(k, int(v)) for k, v in vc.head(top_k).items() if v >= min_group]
                 if (vc < min_group).any():
-                    st["small_groups_hidden"] = True  # labels and counts withheld
+                    # Hiding small groups is not enough: total - sum(shown) would reveal how many
+                    # rows they hold (exactly, if only one is hidden). So the rows left over must
+                    # themselves reach min_group; if not, the smallest shown group joins them.
+                    other = int(vc.sum()) - sum(v for _, v in shown)
+                    while shown and other < min_group:
+                        other += shown.pop()[1]  # shown is sorted descending: last is smallest
+                    st["small_groups_hidden"] = True
+                    st["other_rows"] = other
+                st["top_values"] = {_clip(str(k)): v for k, v in shown}
             out["stats"][_clip(c.name)] = st
 
     if tier >= Tier.SAMPLE:

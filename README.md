@@ -58,7 +58,7 @@ less per call, never more:
 | Tier | The AI receives |
 |---|---|
 | `SCHEMA` | column names, dtypes, inferred roles (measure / dimension / time / period / id) |
-| `STATS` | + null %, min/max/mean, date ranges, top categories |
+| `STATS` | + null %, min/max/mean, date ranges, top categories (groups under 5 rows are hidden; the leftover rows are reported as `other_rows` and never total fewer than 5, so subtraction cannot recover them) |
 | `SAMPLE` | + a small random row sample |
 | `FULL` | + all rows (capped). PII columns are masked in SAMPLE/FULL by default |
 
@@ -78,6 +78,19 @@ plan = build_plan(df, tier="STATS")
 print(plan.to_markdown())
 render_spec(df, plan.charts[0]).show()
 ```
+
+### Exposure preview
+
+`streamlit run examples/exposure_preview.py` shows exactly what an assistant would receive from your data
+at each tier, before you connect anything. Upload a file (or use the built-in sample), pick a tier, mark extra
+sensitive columns, and read the JSON, the plan and the charts. The last tab prints the matching MCP server
+settings. Nothing leaves your machine.
+
+![Exposure preview at the STATS tier](docs/images/exposure_preview_overview.png)
+
+At the SAMPLE tier the email column is masked in every row:
+
+![Masked rows at the SAMPLE tier](docs/images/exposure_preview_masked_rows.png)
 
 ### LLM-ready export and compliance check
 
@@ -122,10 +135,11 @@ release. CI runs lint, an import check of every module, and an end-to-end smoke 
 
 | Suite | Data | Checks | Covers |
 |---|---|---|---|
-| Unit tests | small crafted frames | 79 | roles, tiers, plans, rendering, lint, MCP session, HTML escaping |
-| Synthetic harness | 52 generated files | 2,291 | edge cases: negatives, nulls, infinities, 500k rows, 200 columns, a dozen date formats, hidden and obvious PII, prompt-injection text, path escapes, bad files |
-| Real-data harness | 14 open datasets (below) | 514 | all four exposure tiers; no cell text at SCHEMA; small groups hidden at STATS; PII never exposed; chart totals re-computed with plain pandas; plausibility review |
+| Unit tests | small crafted frames | 112 | roles, tiers, plans, rendering, lint, MCP session, HTML escaping |
+| Synthetic harness | 53 generated files | 2,351 | edge cases: negatives, nulls, infinities, 500k rows, 200 columns, a dozen date formats, hidden and obvious PII, prompt-injection text, path escapes, bad files |
+| Real-data harness | 14 open datasets (below) | 559 | all four exposure tiers; no cell text at SCHEMA; small groups hidden at STATS and not recoverable by subtraction; PII never exposed; chart totals re-computed with plain pandas; plausibility review |
 | MCP end to end | stdio server | 1 script | all six tools, tier ceiling, path-traversal refusals |
+| Assistant test | real Claude sessions using the MCP server, no other tools | 12 prompts | tier ceilings respected, PII masked, small groups hidden, prompt injection in the data not obeyed, path escape refused |
 
 | Dataset | Licence | Rows | Stresses |
 |---|---|---|---|
