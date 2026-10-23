@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ibcs-plotly"
-version = "0.2.1"
+version = "0.2.2"
 description = "Interactive IBCS-compliant business charts on Plotly, with optional Streamlit components"
 readme = "README.md"
 license = "MIT"

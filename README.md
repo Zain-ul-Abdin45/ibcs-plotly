@@ -37,7 +37,7 @@ fig = grouped_column(
 fig.show()
 ```
 
-See [`examples/streamlit_demo.py`](examples/streamlit_demo.py) for a full
+See [`examples/streamlit_demo.py`](https://github.com/Zain-ul-Abdin45/ibcs-plotly/blob/main/examples/streamlit_demo.py) for a full
 dashboard on synthetic data — run it with:
 
 ```bash
@@ -86,11 +86,11 @@ at each tier, before you connect anything. Upload a file (or use the built-in sa
 sensitive columns, and read the JSON, the plan and the charts. The last tab prints the matching MCP server
 settings. Nothing leaves your machine.
 
-![Exposure preview at the STATS tier](docs/images/exposure_preview_overview.png)
+![Exposure preview at the STATS tier](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/exposure_preview_overview.png)
 
 At the SAMPLE tier the email column is masked in every row:
 
-![Masked rows at the SAMPLE tier](docs/images/exposure_preview_masked_rows.png)
+![Masked rows at the SAMPLE tier](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/exposure_preview_masked_rows.png)
 
 ### LLM-ready export and compliance check
 
@@ -112,20 +112,20 @@ judge titles, units or message quality.
 
 ## Tested on real data
 
-![Charts planned for real open datasets](docs/images/real/real_data_charts.gif)
+![Charts planned for real open datasets](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/real_data_charts.gif)
 
 Every chart above and below is the planner's own output for a real public dataset
 (nothing hand-drawn); each image carries its source and licence.
 
 | Chart | Dataset | What it shows |
 |---|---|---|
-| [AC vs PY by month](docs/images/real/retail_months.png) | UCI Online Retail II | 2011 against the same dates of 2010 |
-| [Bars by country](docs/images/real/retail_countries.png) | UCI Online Retail II | ranked, AC over PY |
-| [Daily trend](docs/images/real/taxi_daily.png) | NYC taxi, Jan 2024 | daily grain because the data spans one month |
-| [Small multiples](docs/images/real/taxi_vendors.png) | NYC taxi, Jan 2024 | one scale across panels |
-| [Bars by country](docs/images/real/co2_countries.png), [variance](docs/images/real/co2_variance.png) | Our World in Data CO2 | "World" and regional totals excluded |
-| [Row counts by district](docs/images/real/chicago_events.png) | Chicago crimes | no numeric column, so it counts events |
-| [AC vs PY by month](docs/images/real/seattle_months.png) | Seattle weather | 2015 against 2014 |
+| [AC vs PY by month](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/retail_months.png) | UCI Online Retail II | 2011 against the same dates of 2010 |
+| [Bars by country](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/retail_countries.png) | UCI Online Retail II | ranked, AC over PY |
+| [Daily trend](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/taxi_daily.png) | NYC taxi, Jan 2024 | daily grain because the data spans one month |
+| [Small multiples](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/taxi_vendors.png) | NYC taxi, Jan 2024 | one scale across panels |
+| [Bars by country](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/co2_countries.png), [variance](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/co2_variance.png) | Our World in Data CO2 | "World" and regional totals excluded |
+| [Row counts by district](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/chicago_events.png) | Chicago crimes | no numeric column, so it counts events |
+| [AC vs PY by month](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/seattle_months.png) | Seattle weather | 2015 against 2014 |
 
 ### What was tested
 
