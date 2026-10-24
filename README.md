@@ -22,6 +22,20 @@ pip install ibcs-plotly            # core: plotly + pandas + numpy
 pip install ibcs-plotly[streamlit] # + Streamlit KPI cards / legend
 ```
 
+## Quick start: let an AI plan your charts
+
+```python
+import pandas as pd
+from ibcs_plotly.planner import build_plan, render_spec
+
+df = pd.read_csv("sales.csv")
+plan = build_plan(df, tier="STATS")      # the AI-readable plan: roles, calculations, chart specs
+print(plan.to_markdown())
+render_spec(df, plan.charts[0]).show()   # build the first chart locally, on the full data
+```
+
+Want an assistant to do this for you? [Connect it over MCP](#connect-it-to-claude-or-another-assistant).
+
 ## Quick example
 
 ```python
@@ -78,6 +92,36 @@ plan = build_plan(df, tier="STATS")
 print(plan.to_markdown())
 render_spec(df, plan.charts[0]).show()
 ```
+
+### Connect it to Claude or another assistant
+
+Point the server at a folder of data files. The assistant can only read inside that folder,
+and only up to the tier you set.
+
+Claude Code:
+
+```bash
+pip install "ibcs-plotly[mcp]"
+claude mcp add ibcs -e IBCS_MCP_DATA_DIR=$PWD/data -e IBCS_MCP_MAX_TIER=STATS -- ibcs-plotly-mcp
+```
+
+Claude Desktop or any client that uses a JSON config:
+
+```json
+{
+  "mcpServers": {
+    "ibcs": {
+      "command": "ibcs-plotly-mcp",
+      "env": { "IBCS_MCP_DATA_DIR": "/path/to/data", "IBCS_MCP_MAX_TIER": "STATS" }
+    }
+  }
+}
+```
+
+Then ask, for example: *"Load sales.csv and plan the charts that show how revenue compares with last year."*
+The assistant loads the file, reads the plan, and asks for charts to be rendered. The images are written
+to your machine; the assistant never receives more than the tier allows. Optional settings:
+`IBCS_MCP_MIN_GROUP`, `IBCS_MCP_PII_COLUMNS`, `IBCS_MCP_ALLOW_PII`, `IBCS_MCP_MAX_BYTES`.
 
 ### Exposure preview
 
