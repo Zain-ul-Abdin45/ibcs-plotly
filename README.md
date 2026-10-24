@@ -22,6 +22,20 @@ pip install ibcs-plotly            # core: plotly + pandas + numpy
 pip install ibcs-plotly[streamlit] # + Streamlit KPI cards / legend
 ```
 
+## Quick start: let an AI plan your charts
+
+```python
+import pandas as pd
+from ibcs_plotly.planner import build_plan, render_spec
+
+df = pd.read_csv("sales.csv")
+plan = build_plan(df, tier="STATS")      # the AI-readable plan: roles, calculations, chart specs
+print(plan.to_markdown())
+render_spec(df, plan.charts[0]).show()   # build the first chart locally, on the full data
+```
+
+Want an assistant to do this for you? [Connect it over MCP](#connect-it-to-claude-or-another-assistant).
+
 ## Quick example
 
 ```python
@@ -79,6 +93,36 @@ print(plan.to_markdown())
 render_spec(df, plan.charts[0]).show()
 ```
 
+### Connect it to Claude or another assistant
+
+Point the server at a folder of data files. The assistant can only read inside that folder,
+and only up to the tier you set.
+
+Claude Code:
+
+```bash
+pip install "ibcs-plotly[mcp]"
+claude mcp add ibcs -e IBCS_MCP_DATA_DIR=$PWD/data -e IBCS_MCP_MAX_TIER=STATS -- ibcs-plotly-mcp
+```
+
+Claude Desktop or any client that uses a JSON config:
+
+```json
+{
+  "mcpServers": {
+    "ibcs": {
+      "command": "ibcs-plotly-mcp",
+      "env": { "IBCS_MCP_DATA_DIR": "/path/to/data", "IBCS_MCP_MAX_TIER": "STATS" }
+    }
+  }
+}
+```
+
+Then ask, for example: *"Load sales.csv and plan the charts that show how revenue compares with last year."*
+The assistant loads the file, reads the plan, and asks for charts to be rendered. The images are written
+to your machine; the assistant never receives more than the tier allows. Optional settings:
+`IBCS_MCP_MIN_GROUP`, `IBCS_MCP_PII_COLUMNS`, `IBCS_MCP_ALLOW_PII`, `IBCS_MCP_MAX_BYTES`.
+
 ### Exposure preview
 
 `streamlit run examples/exposure_preview.py` shows exactly what an assistant would receive from your data
@@ -86,11 +130,11 @@ at each tier, before you connect anything. Upload a file (or use the built-in sa
 sensitive columns, and read the JSON, the plan and the charts. The last tab prints the matching MCP server
 settings. Nothing leaves your machine.
 
-![Exposure preview at the STATS tier](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/exposure_preview_overview.png)
+<img src="https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/exposure_preview_overview.png" alt="Exposure preview at the STATS tier" width="800">
 
 At the SAMPLE tier the email column is masked in every row:
 
-![Masked rows at the SAMPLE tier](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/exposure_preview_masked_rows.png)
+<img src="https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/exposure_preview_masked_rows.png" alt="Masked rows at the SAMPLE tier" width="800">
 
 ### LLM-ready export and compliance check
 
@@ -112,7 +156,7 @@ judge titles, units or message quality.
 
 ## Tested on real data
 
-![Charts planned for real open datasets](https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/real_data_charts.gif)
+<img src="https://raw.githubusercontent.com/Zain-ul-Abdin45/ibcs-plotly/main/docs/images/real/real_data_charts.gif" alt="Charts planned for real open datasets" width="800">
 
 Every chart above and below is the planner's own output for a real public dataset
 (nothing hand-drawn); each image carries its source and licence.
@@ -135,9 +179,9 @@ release. CI runs lint, an import check of every module, and an end-to-end smoke 
 
 | Suite | Data | Checks | Covers |
 |---|---|---|---|
-| Unit tests | small crafted frames | 112 | roles, tiers, plans, rendering, lint, MCP session, HTML escaping |
+| Unit tests | small crafted frames | 114 | roles, tiers, plans, rendering, lint, MCP session, HTML escaping |
 | Synthetic harness | 53 generated files | 2,351 | edge cases: negatives, nulls, infinities, 500k rows, 200 columns, a dozen date formats, hidden and obvious PII, prompt-injection text, path escapes, bad files |
-| Real-data harness | 14 open datasets (below) | 559 | all four exposure tiers; no cell text at SCHEMA; small groups hidden at STATS and not recoverable by subtraction; PII never exposed; chart totals re-computed with plain pandas; plausibility review |
+| Real-data harness | 26 open datasets (below) | 1,069 | all four exposure tiers; no cell text at SCHEMA; small groups hidden at STATS and not recoverable by subtraction; PII never exposed; chart totals re-computed with plain pandas; plausibility review |
 | MCP end to end | stdio server | 1 script | all six tools, tier ceiling, path-traversal refusals |
 | Assistant test | real Claude sessions using the MCP server, no other tools | 12 prompts | tier ceilings respected, PII masked, small groups hidden, prompt injection in the data not obeyed, path escape refused |
 
@@ -150,12 +194,16 @@ release. CI runs lint, an import check of every module, and an end-to-end smoke 
 | Our World in Data CO2 | CC BY 4.0 | 50,411 | 79 columns, heavy missing data, regional totals beside countries |
 | Movies, cars, gapminder, stocks | vega-datasets | 406 to 3,201 | text dates, JSON, nulls |
 | Seattle weather, flights, titanic, penguins, diamonds | NOAA, seaborn-data | 144 to 53,940 | month names, small groups, no time column |
+| COVID-19 by country (JHU), World Bank GDP | CC BY 4.0 | 13,979 to 161,568 | running totals, aggregates beside countries, ISO country codes |
+| SF building permits, LA parking citations (samples) | public domain | 50,000 each | addresses and owner names, zero-padded lot codes, sparse columns |
+| US employment, unemployment by industry, population, Iowa electricity, planets, health expenditure, tips, S&P 500 list | vega-datasets, seaborn-data, datahub | 51 to 19,000 | period columns, year/month beside a date, negative changes, a table with no measure |
 
 Real data found problems synthetic data did not, all fixed and covered by unit tests: code columns such as
 `zip`, `district` and `iucr` read as measures or dates; invoice ids with cancellation prefixes turned
 into numbers and blanked; latitude and longitude summed; regional totals double counted; stray dates
 picked as the comparison year; a part-year compared with a full year; monthly lines for one month of data;
-street addresses missed as PII; ID-like columns charted as categories.
+street addresses missed as PII; ID-like columns charted as categories; zero-padded codes such as
+lot `008` turned into numbers, and codes with a few letters silently blanked.
 
 Not covered: charts are never judged for meaning (only for the rules listed above), PII detection
 is heuristic, and derived measures such as quantity times price are not built for you.
