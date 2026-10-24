@@ -38,7 +38,7 @@ _GEO_NAME = re.compile(
     r"(^|_)(lat|latitude|lon|lng|long|longitude|geo|location)($|_)|coordinate", re.I)
 _CODE_NAME = re.compile(
     r"(^|_)(zip|zipcode|postal|postcode|fips|code|district|ward|beat|precinct|council|"
-    r"borough|community|bbl|naics|sic)($|_)", re.I)
+    r"borough|community|bbl|naics|sic|street_number|house_number|lot|parcel|apn)($|_)", re.I)
 _MONTHS = {m.lower() for m in (
     "January February March April May June July August September October November December "
     "Jan Feb Mar Apr Jun Jul Aug Sep Sept Oct Nov Dec").split()}
@@ -119,10 +119,14 @@ def _parse_numeric_text(s: pd.Series) -> pd.Series | None:
 
     if clean(sample).notna().mean() < 0.9:
         return None
+    if raw.str.match(r"[^\d]*0\d").mean() > 0.05:
+        return None  # zero-padded codes such as lot "008" or ZIP "02139" are labels, not numbers
     out = clean(s.astype(str).str.strip().where(s.notna()))
     failed = raw[out.reindex(raw.index).isna()]
     if len(failed) and failed.str.fullmatch(_CODE_VALUE).mean() > 0.5:
         return None  # e.g. invoice numbers where "C489449" marks a cancellation: not a number
+    if len(failed) / len(raw) > 0.02:
+        return None  # parsing would silently blank too many values; keep the column as text
     return out
 
 
